@@ -202,10 +202,7 @@ class Transformer(nn.Module):
 
     def forward(self, x: torch.Tensor, text_mask=None, use_checkpoint=True):
         for layer in self.resblocks:
-            if use_checkpoint:
-                x = torch.utils.checkpoint.checkpoint(layer, x , text_mask)
-            else:
-                x = layer(x, text_mask = text_mask)
+            x = layer(x, text_mask = text_mask)
         return x
 
 
@@ -227,7 +224,7 @@ class VisualTransformer(nn.Module):
         self.ln_post = LayerNorm(width)
         self.proj = nn.Parameter(scale * torch.randn(width, output_dim))
 
-    def forward(self, x: torch.Tensor, skip_last_layer=False, text_embedding=None, text_mask=None, use_checkpoint=True):
+    def forward(self, x: torch.Tensor, skip_last_layer=False, text_embedding=None, text_mask=None, use_checkpoint=False):
         x = self.conv1(x)  # shape = [*, width, grid, grid]
         x = x.reshape(x.shape[0], x.shape[1], -1)  # shape = [*, width, grid ** 2]
         x = x.permute(0, 2, 1)  # shape = [*, grid ** 2, width]
@@ -238,7 +235,7 @@ class VisualTransformer(nn.Module):
 
         x = x.permute(1, 0, 2)  # NLD -> LND
 
-        x = self.transformer(x, use_checkpoint=use_checkpoint)
+        x = self.transformer(x, use_checkpoint=False)
 
         x = x.permute(1, 0, 2)  # LND -> NLD
         

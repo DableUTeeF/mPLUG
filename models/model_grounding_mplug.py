@@ -59,7 +59,7 @@ class MPLUG(nn.Module):
         for module in self.visual_encoder.modules():
             from models.clip.model import Transformer
             if isinstance(module,Transformer):
-                module.use_checkpoint = (config['vision_width'] == 1024)
+                module.use_checkpoint = False
 
         vision_width = config['vision_width']
         

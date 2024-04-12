@@ -143,7 +143,7 @@ class MPLUG(nn.Module):
             self.visn_layer_norm = nn.LayerNorm(self.config_encoder.hidden_size, eps=1e-12)
             self.dropout = nn.Dropout(self.config_encoder.hidden_dropout_prob)
             self.large = True
-        self.use_checkpoint = config["use_checkpoint"] if "use_checkpoint" in config else True
+        self.use_checkpoint = False
 
         self.vision_proj = nn.Linear(self.text_width, self.embed_dim)
         self.text_proj = nn.Linear(self.text_width, self.embed_dim)
