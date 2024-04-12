@@ -17,7 +17,7 @@ import torch.distributed as dist
 
 from models.model_caption_mplug import MPLUG
 from models.vit import interpolate_pos_embed, resize_pos_embed
-from transformer import AutoTokenizer
+from transformers import AutoTokenizer
 
 import utils
 from dataset.utils import save_result
