@@ -54,7 +54,7 @@ class re_train_dataset(Dataset):
 
         image_path = os.path.join(self.image_root, ann['image'])
         image = Image.open(image_path).convert('RGB')
-        image = self.transform(image, return_tensors='pt')
+        image = self.transform(image)
 
         caption = pre_caption(ann['caption'], self.max_words)
 
@@ -184,7 +184,7 @@ class coco_dataset(Dataset):
     def __getitem__(self, idx):
         image, text = self.data[idx]
         image = Image.open(image).convert('RGB')
-        image = self.processor(image).pixel_values
+        image = self.processor(image, return_tensors='pt').pixel_values
         return image, text, "", idx, text  # todo: have to add imageprocessor somewhere
         # image, caption, "", idx, ann["gold_caption"]
 
