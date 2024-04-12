@@ -6,7 +6,7 @@ import os
 import random
 
 from torch.utils.data import Dataset
-
+from transformers import AutoImageProcessor
 from PIL import Image
 from PIL import ImageFile
 
@@ -156,6 +156,7 @@ class coco_dataset(Dataset):
         ipu_json,
         image_dir,
         split,
+        image_processor='/project/lt200203-aimedi/palm/huggingface/vit-base-patch16-224-in21k',
         linguistic=False,
         img_h=224,
         img_w=224,
@@ -163,6 +164,7 @@ class coco_dataset(Dataset):
         self.data = []
         self.img_h = img_h
         self.img_w = img_w
+        self.processor = AutoImageProcessor.from_pretrained(image_processor)
         json_file = json.load(open(coco_json))
         if not linguistic or split == 'train':
             for key in json_file:
@@ -181,7 +183,9 @@ class coco_dataset(Dataset):
 
     def __getitem__(self, idx):
         image, text = self.data[idx]
-        return image, text, "", idx, text
+        image = Image.open(image).convert('RGB')
+        image = self.processor(image).pixel_values
+        return image, text, "", idx, text  # todo: have to add imageprocessor somewhere
         # image, caption, "", idx, ann["gold_caption"]
 
 #
