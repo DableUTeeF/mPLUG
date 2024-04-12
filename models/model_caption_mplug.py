@@ -45,7 +45,7 @@ class MPLUG(nn.Module):
                                               encoder_attention_mask=image_atts,
                                               labels=answer_targets,
                                               return_dict=True,
-                                              reduction='none',
+                                              # reduction='none',
                                               )
             loss = answer_output.loss
 
@@ -108,7 +108,8 @@ class MPLUG(nn.Module):
                                          encoder_hidden_states=question_states,
                                          encoder_attention_mask=question_atts,
                                          return_dict=True,
-                                         reduction='none')
+                                         # reduction='none'
+                                         )
         logits = start_output.logits[:, 0, :]  # first token's logit
 
         # topk_probs: top-k probability 
@@ -138,7 +139,8 @@ class MPLUG(nn.Module):
                                    encoder_attention_mask=question_atts,
                                    labels=targets_ids,
                                    return_dict=True,
-                                   reduction='none')
+                                   # reduction='none'
+                                   )
 
         answer_loss = output.loss
         answer_loss = answer_loss.view(input_ids.size(0), -1)
