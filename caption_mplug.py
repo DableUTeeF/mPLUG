@@ -205,6 +205,8 @@ def main(args, config):
                                                           collate_fns=[coco_collate_fn, coco_collate_fn, coco_collate_fn])
 
     tokenizer = AutoTokenizer.from_pretrained(args.text_encoder)
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
 
     #### Model ####
     print("Creating model")
@@ -263,10 +265,10 @@ def main(args, config):
 
     print("Start training")
     start_time = time.time()
-    vqa_result = evaluation(model, test_loader, tokenizer, device, config)
-    result_file = save_result(vqa_result, args.result_dir, 'vqa_result_epoch10')
-    if utils.is_main_process():
-        result = cal_metric(result_file)
+    # vqa_result = evaluation(model, test_loader, tokenizer, device, config)
+    # result_file = save_result(vqa_result, args.result_dir, 'vqa_result_epoch10')
+    # if utils.is_main_process():
+    #     result = cal_metric(result_file)
     dist.barrier()
     for epoch in range(start_epoch, max_epoch):
         if epoch > 0:
@@ -282,10 +284,10 @@ def main(args, config):
         if args.evaluate:
             break
 
-        vqa_result = evaluation(model, test_loader, tokenizer, device, config)
-        result_file = save_result(vqa_result, args.result_dir, 'vqa_result_epoch%d' % epoch)
+        # vqa_result = evaluation(model, test_loader, tokenizer, device, config)
+        # result_file = save_result(vqa_result, args.result_dir, 'vqa_result_epoch%d' % epoch)
         if utils.is_main_process():
-            result = cal_metric(result_file)
+            # result = cal_metric(result_file)
             log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
                          'epoch': epoch,
                          }
