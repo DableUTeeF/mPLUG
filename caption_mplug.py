@@ -17,7 +17,7 @@ import torch.distributed as dist
 
 from models.model_caption_mplug import MPLUG
 from models.vit import interpolate_pos_embed, resize_pos_embed
-from models.tokenization_bert import BertTokenizer
+from transformer import AutoTokenizer
 
 import utils
 from dataset.utils import save_result
@@ -204,7 +204,7 @@ def main(args, config):
                                                           num_workers=[8, 8, 8], is_trains=[True, False, False],
                                                           collate_fns=[coco_collate_fn, coco_collate_fn, coco_collate_fn])
 
-    tokenizer = BertTokenizer.from_pretrained(args.text_encoder)
+    tokenizer = AutoTokenizer.from_pretrained(args.text_encoder)
 
     #### Model ####
     print("Creating model")
