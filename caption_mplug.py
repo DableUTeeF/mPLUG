@@ -1,6 +1,5 @@
 import argparse
 import os
-import ruamel_yaml as yaml
 import language_evaluation
 import numpy as np
 import random
@@ -337,7 +336,7 @@ if __name__ == '__main__':
     parser.add_argument('--accum_steps', default=4, type=int)
     args = parser.parse_args()
 
-    config = yaml.load(open(args.config, 'r'), Loader=yaml.Loader)
+    config = json.load(open(args.config, 'r'))
 
     args.result_dir = os.path.join(args.output_dir, 'result')
 
@@ -352,6 +351,6 @@ if __name__ == '__main__':
     config['text_encoder'] = args.text_encoder
     config['text_decoder'] = args.text_decoder
 
-    yaml.dump(config, open(os.path.join(args.output_dir, 'config.yaml'), 'w'))
+    json.dump(config, open(os.path.join(args.output_dir, 'config.json'), 'w'))
 
     main(args, config)
