@@ -258,7 +258,7 @@ def main(args, config):
 
     model_without_ddp = model
     if args.distributed:
-        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], find_unused_parameters=False)
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], find_unused_parameters=True)
         # import apex
         # model = apex.parallel.DistributedDataParallel(model, delay_allreduce=True)
         # model_without_ddp = model.module
