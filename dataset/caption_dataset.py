@@ -54,7 +54,7 @@ class re_train_dataset(Dataset):
 
         image_path = os.path.join(self.image_root, ann['image'])
         image = Image.open(image_path).convert('RGB')
-        image = self.transform(image)
+        image = self.transform(image, return_tensors='pt')
 
         caption = pre_caption(ann['caption'], self.max_words)
 
