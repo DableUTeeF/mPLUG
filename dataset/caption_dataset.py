@@ -184,7 +184,7 @@ class coco_dataset(Dataset):
     def __getitem__(self, idx):
         image, text = self.data[idx]
         image = Image.open(image).convert('RGB')
-        image = self.processor(image, return_tensors='pt').pixel_values
+        image = self.processor(image, return_tensors='pt').pixel_values[0]
         return image, text, "", idx, text  # todo: have to add imageprocessor somewhere
         # image, caption, "", idx, ann["gold_caption"]
 
