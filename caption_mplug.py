@@ -48,12 +48,12 @@ def train(model, data_loader, optimizer, tokenizer, epoch, warmup_steps, device,
     for i, (image, caption, object_labels, image_ids, gold_caption) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
         image = image.to(device, non_blocking=True)
         if config['prompt'] != "":
-            caption = [config['prompt'] + each+config['eos'] for each in caption]
+            caption = [config['prompt'] + each + config['eos'] for each in caption]
         else:
-            caption = [each+config['eos'] for each in caption]
-        question_input = [config['bos']+" "+each for each in object_labels]
+            caption = [each + config['eos'] for each in caption]
+        question_input = [config['bos'] + " " + each for each in object_labels]
         if i == 0:
-            print (question_input)
+            print(question_input)
         caption = tokenizer(caption, padding='longest', truncation=True, max_length=args.max_input_length, return_tensors="pt").to(device)
         question_input = tokenizer(question_input, padding='longest', truncation=True, max_length=args.max_input_length, return_tensors="pt").to(device)
         # question_input = caption.input_ids[0,0].repeat(caption.input_ids.size(0), 1)
@@ -88,10 +88,10 @@ def train(model, data_loader, optimizer, tokenizer, epoch, warmup_steps, device,
 
         if epoch == 0 and i % step_size == 0 and i <= warmup_iterations:
             scheduler.step(i // step_size)
-        
-        del image, question_input,caption,loss 
 
-            # gather the stats from all processes
+        del image, question_input, caption, loss
+
+        # gather the stats from all processes
     metric_logger.synchronize_between_processes()
     print("Averaged stats:", metric_logger.global_avg())
     return {k: "{:.3f}".format(meter.global_avg) for k, meter in metric_logger.meters.items()}
@@ -108,20 +108,20 @@ def evaluation(model, data_loader, tokenizer, device, config):
 
     result = []
 
-
     answer_input = None
-    for n, (image, caption, object_labels, image_ids, gold_caption) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):        
-        image = image.to(device,non_blocking=True)             
-        caption = [each+config['eos'] for each in caption]
-        question_input = [config['bos']+" "+each for each in object_labels]
+    for n, (image, caption, object_labels, image_ids, gold_caption) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
+        image = image.to(device, non_blocking=True)
+        caption = [each + config['eos'] for each in caption]
+        question_input = [config['bos'] + " " + each for each in object_labels]
         caption = tokenizer(caption, padding='longest', truncation=True, max_length=args.max_input_length, return_tensors="pt").to(device)
         question_input = tokenizer(question_input, padding='longest', truncation=True, max_length=args.max_input_length, return_tensors="pt").to(device)
         topk_ids, topk_probs = model(image, question_input, caption, train=False)
 
         for image_id, topk_id, topk_prob, gold_caption_list in zip(image_ids, topk_ids, topk_probs, gold_caption):
             ans = tokenizer.decode(topk_id[0]).replace("[SEP]", "").replace("[CLS]", "").replace("[PAD]", "").strip()
-            result.append({"question_id":image_id, "pred_caption":ans, "gold_caption":gold_caption_list})   
+            result.append({"question_id": image_id, "pred_caption": ans, "gold_caption": gold_caption_list})
     return result
+
 
 @torch.no_grad()
 def evaluate(model, data_loader, dataset, tokenizer, device, config):
@@ -135,17 +135,17 @@ def evaluate(model, data_loader, dataset, tokenizer, device, config):
     predicts = []
     answers = []
     answer_input = None
-    for n, (image, caption, image_ids, gold_caption) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):        
-        image = image.to(device,non_blocking=True)             
-        caption = [each+config['eos'] for each in caption]
-        question_input = [config['bos']]*len(caption)
+    for n, (image, caption, image_ids, gold_caption) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
+        image = image.to(device, non_blocking=True)
+        caption = [each + config['eos'] for each in caption]
+        question_input = [config['bos']] * len(caption)
         caption = tokenizer(caption, padding='longest', truncation=True, max_length=args.max_input_length, return_tensors="pt").to(device)
         question_input = tokenizer(question_input, padding='longest', truncation=True, max_length=args.max_input_length, return_tensors="pt").to(device)
 
         for i in range(len(gold_caption)):
             predicts.append(gold_caption[i][0])
             answers.append(gold_caption[i])
-        #{'Bleu_1': 0.9999999999863945, 'Bleu_2': 0.9999999999859791, 'Bleu_3': 0.9999999999854866, 'Bleu_4': 0.999999999984889, 'METEOR': 1.0, 'ROUGE_L': 1.0, 'CIDEr': 2.7246232035629268, 'SPICE': 0.40389416048620613}
+        # {'Bleu_1': 0.9999999999863945, 'Bleu_2': 0.9999999999859791, 'Bleu_3': 0.9999999999854866, 'Bleu_4': 0.999999999984889, 'METEOR': 1.0, 'ROUGE_L': 1.0, 'CIDEr': 2.7246232035629268, 'SPICE': 0.40389416048620613}
         result = cal_metric(predicts, answers)
         metric_logger.meters['Bleu_1'].update(result["Bleu_1"], n=image.size(0))
         metric_logger.meters['Bleu_2'].update(result["Bleu_1"], n=image.size(0))
@@ -158,6 +158,8 @@ def evaluate(model, data_loader, dataset, tokenizer, device, config):
     metric_logger.synchronize_between_processes()
     print("Averaged stats:", metric_logger.global_avg())
     return {k: "{:.4f}".format(meter.global_avg) for k, meter in metric_logger.meters.items()}
+
+
 def cal_metric(result_file):
     result_list = json.load(open(result_file, "r"))
     predicts = []
@@ -167,8 +169,9 @@ def cal_metric(result_file):
         answers.append(each["gold_caption"])
     evaluator = language_evaluation.CocoEvaluator(verbose=False)
     results = evaluator.run_evaluation(predicts, answers)
-    print (len(result_list), results)
+    print(len(result_list), results)
     return results
+
 
 def main(args, config):
     utils.init_distributed_mode(args)
@@ -193,15 +196,14 @@ def main(args, config):
     if args.distributed:
         num_tasks = utils.get_world_size()
         global_rank = utils.get_rank()
-        samplers = create_sampler(datasets, [True, False, False], num_tasks, global_rank)         
+        samplers = create_sampler(datasets, [True, False, False], num_tasks, global_rank)
     else:
         samplers = [None, None, None]
 
-    train_loader, val_loader, test_loader = create_loader(datasets,samplers,
-                                              batch_size=[config['batch_size_train'],config['batch_size_test'], config['batch_size_test']],
-                                              num_workers=[8,8,8],is_trains=[True, False, False], 
-                                              collate_fns=[coco_collate_fn, coco_collate_fn, coco_collate_fn]) 
-
+    train_loader, val_loader, test_loader = create_loader(datasets, samplers,
+                                                          batch_size=[config['batch_size_train'], config['batch_size_test'], config['batch_size_test']],
+                                                          num_workers=[8, 8, 8], is_trains=[True, False, False],
+                                                          collate_fns=[coco_collate_fn, coco_collate_fn, coco_collate_fn])
 
     tokenizer = BertTokenizer.from_pretrained(args.text_encoder)
 
@@ -233,13 +235,13 @@ def main(args, config):
 
         # reshape positional embedding to accomodate for image resolution change
         if config["clip_name"] == "ViT-B-16":
-            num_patches = int(config["image_res"] * config["image_res"]/(16*16))
+            num_patches = int(config["image_res"] * config["image_res"] / (16 * 16))
         elif config["clip_name"] == "ViT-L-14":
-            num_patches = int(config["image_res"] * config["image_res"]/(14*14))
+            num_patches = int(config["image_res"] * config["image_res"] / (14 * 14))
         pos_embed = nn.Parameter(torch.zeros(num_patches + 1, 768).float())
 
         pos_embed = resize_pos_embed(state_dict['visual_encoder.visual.positional_embedding'].unsqueeze(0),
-                                                   pos_embed.unsqueeze(0))
+                                     pos_embed.unsqueeze(0))
         state_dict['visual_encoder.visual.positional_embedding'] = pos_embed
 
         if not args.evaluate:
@@ -249,14 +251,13 @@ def main(args, config):
                     state_dict[encoder_key] = state_dict[key]
                     del state_dict[key]
 
-
         msg = model.load_state_dict(state_dict, strict=False)
         print('load checkpoint from %s' % args.checkpoint)
         print(msg)
 
     model_without_ddp = model
     if args.distributed:
-        #model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], find_unused_parameters=True)
+        # model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], find_unused_parameters=True)
         import apex
         model = apex.parallel.DistributedDataParallel(model, delay_allreduce=True)
         model_without_ddp = model.module
@@ -272,7 +273,6 @@ def main(args, config):
         if epoch > 0:
             lr_scheduler.step(epoch + warmup_steps)
 
-            
         if not args.evaluate:
             if args.distributed:
                 train_loader.sampler.set_epoch(epoch)
@@ -303,8 +303,8 @@ def main(args, config):
 
         dist.barrier()
 
-    #vqa_result = evaluation(model, test_loader, tokenizer, device, config)
-    #result_file = save_result(vqa_result, args.result_dir, 'vqa_result_epoch%d' % epoch)
+    # vqa_result = evaluation(model, test_loader, tokenizer, device, config)
+    # result_file = save_result(vqa_result, args.result_dir, 'vqa_result_epoch%d' % epoch)
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
@@ -347,11 +347,10 @@ if __name__ == '__main__':
     config["max_length"] = args.max_length
     config["add_object"] = args.add_object
     config["beam_size"] = args.beam_size
-    #config['optimizer']['lr'] = args.lr
-    #config['schedular']['lr'] = args.lr
+    # config['optimizer']['lr'] = args.lr
+    # config['schedular']['lr'] = args.lr
     config['text_encoder'] = args.text_encoder
     config['text_decoder'] = args.text_decoder
-
 
     yaml.dump(config, open(os.path.join(args.output_dir, 'config.yaml'), 'w'))
 
