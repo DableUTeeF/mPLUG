@@ -200,7 +200,7 @@ def main(args, config):
         samplers = [None, None, None]
 
     train_loader, val_loader, test_loader = create_loader(datasets, samplers,
-                                                          batch_size=[config['batch_size_train'], config['batch_size_test'], config['batch_size_test']],
+                                                          batch_size=[args.batch_size, config['batch_size_test'], config['batch_size_test']],
                                                           num_workers=[8, 8, 8], is_trains=[True, False, False],
                                                           collate_fns=[coco_collate_fn, coco_collate_fn, coco_collate_fn])
 
@@ -322,6 +322,7 @@ if __name__ == '__main__':
     parser.add_argument('--text_decoder', default='bert-base-uncased')
     parser.add_argument('--device', default='cuda')
     parser.add_argument('--seed', default=42, type=int)
+    parser.add_argument('--batch_size', default=42, type=int)
     parser.add_argument('--min_length', default=1, type=int)
     parser.add_argument('--lr', default=2e-5, type=float)
     parser.add_argument('--max_length', default=10, type=int)
