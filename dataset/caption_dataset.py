@@ -6,7 +6,7 @@ import os
 import random
 
 from torch.utils.data import Dataset
-from transformers import AutoImageProcessor
+from transformers import AutoFeatureExtractor
 from PIL import Image
 from PIL import ImageFile
 
@@ -164,7 +164,7 @@ class coco_dataset(Dataset):
         self.data = []
         self.img_h = img_h
         self.img_w = img_w
-        self.processor = AutoImageProcessor.from_pretrained(image_processor)
+        self.processor = AutoFeatureExtractor.from_pretrained(image_processor)
         json_file = json.load(open(coco_json))
         if not linguistic or split == 'train':
             for key in json_file:
