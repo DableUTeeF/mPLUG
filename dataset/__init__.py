@@ -64,12 +64,24 @@ def create_dataset(dataset, config, epoch=None):
                                       is_train=False, add_object=config['add_object'])
         return val_dataset, test_dataset
     elif dataset == 'coco':
-        train_dataset = coco_dataset(config['train_file'], train_transform, config['coco_root'], max_words=config['max_length'], read_local_data=config['read_local_data'],
-                                     is_train=True, add_object=config['add_object'])
-        val_dataset = coco_dataset(config['val_file'], test_transform, config['coco_root'], max_words=config['max_length'], read_local_data=config['read_local_data'],
-                                   is_train=False, add_object=config['add_object'])
-        test_dataset = coco_dataset(config['test_file'], test_transform, config['coco_root'], max_words=config['max_length'], read_local_data=config['read_local_data'],
-                                    is_train=False, add_object=config['add_object'])
+        train_dataset = coco_dataset(
+            '/project/lt200203-aimedi/ipu24/raw/annotation/capgen_v0.3_coco.json',
+            '/project/lt200203-aimedi/ipu24/raw/annotation/capgen_v0.3_train.json',
+            '/project/lt200203-aimedi/ipu24/raw/',
+            'train',
+        )
+        val_dataset = coco_dataset(
+            '/project/lt200203-aimedi/ipu24/raw/annotation/capgen_v0.3_coco.json',
+            '/project/lt200203-aimedi/ipu24/raw/annotation/capgen_v0.3_val.json',
+            '/project/lt200203-aimedi/ipu24/raw/',
+            'val',
+        )
+        test_dataset = coco_dataset(
+            '/project/lt200203-aimedi/ipu24/raw/annotation/capgen_v0.3_coco.json',
+            '/project/lt200203-aimedi/ipu24/raw/annotation/capgen_v0.3_val.json',
+            '/project/lt200203-aimedi/ipu24/raw/',
+            'val',
+        )
         return train_dataset, val_dataset, test_dataset
     elif dataset == 'nlvr':
         train_dataset = nlvr_dataset(config['train_file'], train_transform, config['image_root'])

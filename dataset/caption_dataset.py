@@ -151,78 +151,113 @@ class nocaps_dataset(Dataset):
 
 
 class coco_dataset(Dataset):
-    def __init__(self, ann_file, transform, root_path, max_words=30, read_local_data=True, is_train=True, add_object=False):
-        self.ann = []
-        for f in ann_file:
-            self.ann += json.load(open(f, 'r'))
-        self.transform = transform
-        self.max_words = max_words
-        self.read_local_data = read_local_data
-        self.root_path = root_path
-        self.ann_new = []
-        self.add_object = add_object
-        for each in self.ann:
-            filename = each["filename"]
-            sentences = each["sentences"]
-            filepath = each["filepath"]
-            if filepath == "val2014":
-                file_root = "val2014_img"
-            elif filepath == "train2014":
-                file_root = "train2014_img"
-            else:
-                file_root = filepath
-            image_path = os.path.join(file_root, filename)
-            gold_caption = []
-            for sent in sentences:
-                caption = sent["raw"]
-                gold_caption.append(caption.lower())
-            if self.add_object:
-                object_list = each["object_label"].split("&&")
-                new_object_list = list(set(object_list))
-                new_object_list.sort(key=object_list.index)
-                object_label = " ".join(new_object_list)
-            else:
-                object_label = ""
-            if is_train:
-                for sent in sentences:
-                    caption = sent["raw"].lower()
-                    self.ann_new.append({"image": image_path, "caption": caption, "gold_caption": gold_caption, "object_label": object_label})
-            else:
-                self.ann_new.append({"image": image_path, "caption": sentences[0]["raw"].lower(), "gold_caption": gold_caption, "object_label": object_label})
-        self.ann = self.ann_new
-        del self.ann_new
+    def __init__(self,
+        coco_json,
+        ipu_json,
+        image_dir,
+        split,
+        linguistic=False,
+        img_h=224,
+        img_w=224,
+    ):
+        self.data = []
+        self.img_h = img_h
+        self.img_w = img_w
+        json_file = json.load(open(coco_json))
+        if not linguistic or split == 'train':
+            for key in json_file:
+                if not key.startswith(split):
+                    continue
+                for ann in json_file[key]:
+                    self.data.append((os.path.join(image_dir, key+'.jpg'), ann))
+        if not linguistic or split == 'val':
+            json_file = json.load(open(ipu_json))
+            for key in json_file:
+                for ann in json_file[key]:
+                    self.data.append((os.path.join(image_dir, key), ann))
 
     def __len__(self):
-        return len(self.ann)
+        return len(self.data)
 
-    def __getitem__(self, index):
+    def __getitem__(self, idx):
+        image, text = self.data[idx]
+        return image, text, "", idx, text
+        # image, caption, "", idx, ann["gold_caption"]
 
-        ann = self.ann[index]
-        caption = ann['caption']
-        image_id = ann['image'].split("/")[-1]
-        object_label = ann['object_label']
-        if self.read_local_data:
-            image_path = os.path.join(self.root_path, ann['image'])
-            image = Image.open(image_path).convert('RGB')
-            image = self.transform(image)
-        else:
-            while not self.bucket.object_exists("mm_feature/" + ann['image']):
-                index = 0 if index == (len(self) - 1) else index + 1
-                ann = self.ann[index]
-            while True:
-                try:
-                    image = self.bucket.get_object("mm_feature/" + ann['image'])
-                    image = BytesIO(image.read())
-                    image = Image.open(image).convert('RGB')
-                    image = self.transform(image)
-                except:
-                    # logging.info("Get image:{} from oss failed, retry.".format(ann['image']))
-                    index = 0 if index == (len(self) - 1) else index + 1
-                    ann = self.ann[index]
-                    continue
-                break
-
-        return image, caption, object_label, image_id, ann["gold_caption"]
+#
+# class coco_dataset(Dataset):
+#     def __init__(self, ann_file, transform, root_path, max_words=30, read_local_data=True, is_train=True, add_object=False):
+#         self.ann = []
+#         for f in ann_file:
+#             self.ann += json.load(open(f, 'r'))
+#         self.transform = transform
+#         self.max_words = max_words
+#         self.read_local_data = read_local_data
+#         self.root_path = root_path
+#         self.ann_new = []
+#         self.add_object = add_object
+#         for each in self.ann:
+#             filename = each["filename"]
+#             sentences = each["sentences"]
+#             filepath = each["filepath"]
+#             if filepath == "val2014":
+#                 file_root = "val2014_img"
+#             elif filepath == "train2014":
+#                 file_root = "train2014_img"
+#             else:
+#                 file_root = filepath
+#             image_path = os.path.join(file_root, filename)
+#             gold_caption = []  # todo: it's just fucking lowercase
+#             for sent in sentences:
+#                 caption = sent["raw"]
+#                 gold_caption.append(caption.lower())
+#             if self.add_object:
+#                 object_list = each["object_label"].split("&&")
+#                 new_object_list = list(set(object_list))
+#                 new_object_list.sort(key=object_list.index)
+#                 object_label = " ".join(new_object_list)
+#             else:
+#                 object_label = ""
+#             if is_train:
+#                 for sent in sentences:
+#                     caption = sent["raw"].lower()
+#                     self.ann_new.append({"image": image_path, "caption": caption, "gold_caption": gold_caption, "object_label": object_label})
+#             else:
+#                 self.ann_new.append({"image": image_path, "caption": sentences[0]["raw"].lower(), "gold_caption": gold_caption, "object_label": object_label})
+#         self.ann = self.ann_new
+#         del self.ann_new
+#
+#     def __len__(self):
+#         return len(self.ann)
+#
+#     def __getitem__(self, index):
+#
+#         ann = self.ann[index]
+#         caption = ann['caption']
+#         image_id = ann['image'].split("/")[-1]
+#         object_label = ann['object_label']
+#         if self.read_local_data:
+#             image_path = os.path.join(self.root_path, ann['image'])
+#             image = Image.open(image_path).convert('RGB')
+#             image = self.transform(image)
+#         else:
+#             while not self.bucket.object_exists("mm_feature/" + ann['image']):
+#                 index = 0 if index == (len(self) - 1) else index + 1
+#                 ann = self.ann[index]
+#             while True:
+#                 try:
+#                     image = self.bucket.get_object("mm_feature/" + ann['image'])
+#                     image = BytesIO(image.read())
+#                     image = Image.open(image).convert('RGB')
+#                     image = self.transform(image)
+#                 except:
+#                     # logging.info("Get image:{} from oss failed, retry.".format(ann['image']))
+#                     index = 0 if index == (len(self) - 1) else index + 1
+#                     ann = self.ann[index]
+#                     continue
+#                 break
+#
+#         return image, caption, object_label, image_id, ann["gold_caption"]
 
 
 class pretrain_dataset_4m(Dataset):
