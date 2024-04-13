@@ -23,8 +23,10 @@ class MPLUG(nn.Module):
         self.visual_encoder, _ = initialize_clip(config)
         self.text_encoder = BertModel.from_pretrained(config['text_encoder'], config=self.config_encoder, add_pooling_layer=False)
         self.fusion_encoder = FusionModel.from_pretrained(config['text_encoder'], config=self.config_fusion, add_pooling_layer=False)
+        self.text_kwargs = {}
         if config['text_decoder'].startswith('bert'):
             self.text_decoder = BertPrefixModel.from_pretrained(config['text_decoder'], config=self.config_decoder)
+            self.text_kwargs = dict(reduction='none')
         elif 'bert' in config['text_decoder']:
             self.text_decoder = AutoModelForCausalLM.from_pretrained(config['text_decoder'], add_cross_attention=True, is_decoder=True)
         else:
@@ -49,7 +51,7 @@ class MPLUG(nn.Module):
                                               encoder_attention_mask=image_atts,
                                               labels=answer_targets,
                                               return_dict=True,
-                                              # reduction='none',
+                                              **self.text_kwargs
                                               )
             loss = answer_output.loss
 
@@ -112,7 +114,7 @@ class MPLUG(nn.Module):
                                          encoder_hidden_states=question_states,
                                          encoder_attention_mask=question_atts,
                                          return_dict=True,
-                                         # reduction='none'
+                                         **self.text_kwargs
                                          )
         logits = start_output.logits[:, 0, :]  # first token's logit
 
@@ -143,7 +145,7 @@ class MPLUG(nn.Module):
                                    encoder_attention_mask=question_atts,
                                    labels=targets_ids,
                                    return_dict=True,
-                                   # reduction='none'
+                                   **self.text_kwargs
                                    )
 
         answer_loss = output.loss
