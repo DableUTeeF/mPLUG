@@ -323,6 +323,7 @@ if __name__ == '__main__':
     parser.add_argument('--device', default='cuda')
     parser.add_argument('--seed', default=42, type=int)
     parser.add_argument('--batch_size', default=42, type=int)
+    parser.add_argument('--epoch', default=5, type=int)
     parser.add_argument('--min_length', default=1, type=int)
     parser.add_argument('--lr', default=2e-5, type=float)
     parser.add_argument('--max_length', default=10, type=int)
@@ -341,6 +342,7 @@ if __name__ == '__main__':
     if os.environ['WORLD_SIZE'] is not None:
         args.world_size = int(os.environ['WORLD_SIZE'])
     config = json.load(open(args.config, 'r'))
+    config['schedular']['epochs'] = args.epoch
 
     args.result_dir = os.path.join(args.output_dir, 'result')
 
