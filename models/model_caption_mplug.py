@@ -23,8 +23,12 @@ class MPLUG(nn.Module):
         self.visual_encoder, _ = initialize_clip(config)
         self.text_encoder = BertModel.from_pretrained(config['text_encoder'], config=self.config_encoder, add_pooling_layer=False)
         self.fusion_encoder = FusionModel.from_pretrained(config['text_encoder'], config=self.config_fusion, add_pooling_layer=False)
-        # self.text_decoder = BertPrefixModel.from_pretrained(config['text_decoder'], config=self.config_decoder)
-        self.text_decoder = AutoModelForCausalLM.from_pretrained(config['text_decoder'], add_cross_attention=True, is_decoder=True)
+        if config['text_decoder'].startswith('bert'):
+            self.text_decoder = BertPrefixModel.from_pretrained(config['text_decoder'], config=self.config_decoder)
+        elif 'bert' in config['text_decoder']:
+            self.text_decoder = AutoModelForCausalLM.from_pretrained(config['text_decoder'], add_cross_attention=True, is_decoder=True)
+        else:
+            self.text_decoder = AutoModelForCausalLM.from_pretrained(config['text_decoder'], add_cross_attention=True)
         self.beam_generator = TextGenerator(config, self.text_decoder)
 
     def forward(self, image, question, answer=None, train=True, out_size=5, scst=False):
