@@ -24,7 +24,7 @@ class MPLUG(nn.Module):
         self.text_encoder = BertModel.from_pretrained(config['text_encoder'], config=self.config_encoder, add_pooling_layer=False)
         self.fusion_encoder = FusionModel.from_pretrained(config['text_encoder'], config=self.config_fusion, add_pooling_layer=False)
         self.text_kwargs = {}
-        if config['text_decoder'].startswith('bert'):
+        if (config['text_decoder'].split('/'))[-1].startswith('bert'):
             self.text_decoder = BertPrefixModel.from_pretrained(config['text_decoder'], config=self.config_decoder)
             self.text_kwargs = dict(reduction='none')
         elif 'bert' in config['text_decoder']:
